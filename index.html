@@ -91,11 +91,16 @@ moving beyond presence-only data</a>.</p>
     var map = L.map('map', {
         maxZoom: 17,
         zoomControl: false,
-        attributionControl: false 
+        attributionControl: false  // attribution bottomright switch off
     }).setView([24.278952, 56.448315], 2);
 
     var mapgrey = L.tileLayer('http://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
-        attribution: ''
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy;<a href="https://carto.com/attribution">CARTO</a>'
+      }).addTo(map);
+
+    // set attribution bottomleft
+    L.control.attribution({
+    position: 'bottomleft'
     }).addTo(map);
 
     var layerSwitcher = L.control.layers({}, null, {
