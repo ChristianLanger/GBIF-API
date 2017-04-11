@@ -50,6 +50,7 @@
     
 </head>
 
+
 <body>
     <div id="sidebar" class="sidebar">
         <div class="sidebar-content">
@@ -67,8 +68,15 @@ moving beyond presence-only data</a>.</p>
                                 <input id="gbif_id" type="checkbox" value=""> Occurrence records published by GBIF
                             </label>
                             <br>
-                            <p style="font-size:12px;color:#999;margin-top:10px">
-                                Display all 702.898.106 records that are published through the GBIF network in the year range of 1900-2017.
+                            <p style="font-size:12px;color:#999;margin-top:10px">Display all
+                            <!--jQuery $.ajax() method to consume the RESTful web service for all GBIF occurrence records-->
+                            <script>
+                                $(document).ready(function() {
+                                    $.ajax({url: "http://api.gbif.org/v1/occurrence/count"}).then(function(data) {
+                                    $('.gbifrecords').append(data.toLocaleString())});
+                                });
+                            </script>
+                            <span class="gbifrecords"></span> records that are published through the GBIF network in the year range of 1900-2017.
                             </p>
                             <div>
                                 <p>Year range (<span id="years">1900 - 2017</span>):</p>
