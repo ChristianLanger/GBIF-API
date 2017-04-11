@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Search GBIF API</title>
+    <meta name="description" content="Search GBIF occurrence records">
+		<meta name="author" content="Christian Langer">
+    
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <!-- "fonts" Ordner verweist auch auf fonts awesome.css-->
+    <link href="css/font-awesome.css" rel="stylesheet">
+    <link href='css/mapbox.css' rel='stylesheet' />
+    
+    <link rel="stylesheet" href="css/leaflet.css" />
+    <script src="http://data.geobon.org/networks/js/leaflet.js"></script>
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src='js/mapbox.js'></script>
+    
+    <link rel="stylesheet" href="css/leaflet-sidebar.css" />
+    
+    <script src='js/bootstrap-slider.min.js'></script>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap-slider.min.css">
+   	
+   	<script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/8.3.0/nouislider.min.js"></script>
+    <link href='css/nouislider.css' rel='stylesheet' />
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <style>
+    #map {
+        position: absolute;
+        top: 0px;
+        bottom: 0px;
+        left: 0px;
+        right: 0px;
+    }
+    
+    .icon {
+        font-size: 2.5em;
+        padding-top: 5px;
+    }
+    
+    .slider-tiles {
+        padding: 10px 0 15px 0;
+    }
+    </style>
+    
+</head>
+
+<body>
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-content">
+            <div class="sidebar-pane active">
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        <div class="checkbox">
+                            <p style="font-size:12px;color:#999;margin-top:10px">
+                                <img src="img/GBIF.png" width="100px" style="float:left;margin:5px;padding-bottom:20px" title="GBIF"> The Global Biodiversity Information Facility (GBIF) is an international open data infrastructure, funded by governments. GEO BON is working towards the data mobilisation through GBIF to share dynamic population abundance data (including time series population data for the EBV class species populations).
+                                <br>More information can be found in our document:
+                                <br><a href="http://www.geobon.org/Downloads/brochures/2016/The%20EventCore-brochure-2016.pdf" target="_blank" style="cursor:pointer"> The Event Core:
+moving beyond presence-only data</a>.</p>
+                            <br>
+                            <label>
+                                <input id="gbif_id" type="checkbox" value=""> Occurrence records published by GBIF
+                            </label>
+                            <br>
+                            <p style="font-size:12px;color:#999;margin-top:10px">
+                                Display all 702.898.106 records that are published through the GBIF network in the year range of 1900-2017.
+                            </p>
+                            <div>
+                                <p>Year range (<span id="years">1900 - 2017</span>):</p>
+                                <div id='slider'></div>
+                            </div>
+                            <div class="slider-tiles">
+                                <div>Opacity:
+                                    <input type="text" class="span2" id="range-gbif" data-slider-min="0" data-slider-max="100" data-slider-step="5" data-slider-value="100">
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div id="map" class="sidebar-map"></div>
+    <script src="js/leaflet-sidebar.js"></script>
+    <script>
+    var map = L.map('map', {
+        maxZoom: 17,
+        zoomControl: false,
+        attributionControl: false 
+    }).setView([24.278952, 56.448315], 2);
+
+    var mapgrey = L.tileLayer('http://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+        attribution: ''
+    }).addTo(map);
+
+    var layerSwitcher = L.control.layers({}, null, {
+        collapsed: false,
+        position: 'topleft'
+    }).addTo(map);
+
+ 
+    map.addControl(L.control.zoom({
+        position: 'topright'
+    }));
+
+    
+    L.mapbox.accessToken = 'pk.eyJ1IjoiY2hyaXN0aWFubGFuZ2VyIiwiYSI6InJOMFAxS00ifQ.tt_H4EfT3ccRSPrkD0KKRQ';
+    map.addControl(L.mapbox.geocoderControl('mapbox.places', {
+        autocomplete: true,
+        position: 'topright'
+    }));
+
+
+    // sidebar erstellen
+    var sidebar = L.control.sidebar('sidebar', {
+        position: 'right'
+    }).addTo(map);
+
+    // GBIF as TMS xyz
+    // layer parameter als OBS_, SP_, OTH_
+    //var gbif = L.tileLayer('http://api.gbif.org/v1/map/density/tile?x={x}&y={y}&z={z}&type=TAXON&key=1&layer=OBS_NO_YEAR&layer=SP_NO_YEAR&layer=OTH_NO_YEAR&layer=OBS_1900_1910&layer=SP_1900_1910&layer=OTH_1900_1910&layer=OBS_1910_1920&layer=SP_1910_1920&layer=OTH_1910_1920&layer=OBS_1920_1930&layer=SP_1920_1930&layer=OTH_1920_1930&layer=OBS_1930_1940&layer=SP_1930_1940&layer=OTH_1930_1940&layer=OBS_1940_1950&layer=SP_1940_1950&layer=OTH_1940_1950&layer=OBS_1950_1960&layer=SP_1950_1960&layer=OTH_1950_1960&layer=OBS_1960_1970&layer=SP_1960_1970&layer=OTH_1960_1970&layer=OBS_1970_1980&layer=SP_1970_1980&layer=OTH_1970_1980&layer=OBS_1980_1990&layer=SP_1980_1990&layer=OTH_1980_1990&layer=OBS_1990_2000&layer=SP_1990_2000&layer=OTH_1990_2000&layer=OBS_2000_2010&layer=SP_2000_2010&layer=OTH_2000_2010&layer=OBS_2010_2020&layer=SP_2010_2020&layer=OTH_2010_2020&layer=LIVING&layer=FOSSIL&palette=yellows_reds' , {
+    //zIndex: 1000});
+
+    var occurrenceLayer = "http://api.gbif.org/v1/map/density/tile?x={x}&y={y}&z={z}&palette=yellows_reds&resolution=1";
+
+    function yearsToGBIFParams(minYear, maxYear) {
+        var opts = [];
+        for (var y = Math.min(minYear); y <= Math.min(maxYear); y += 10) {
+            opts.push("layer=SPE_" + y + "_" + (y + 10));
+            opts.push("layer=OBS_" + y + "_" + (y + 10));
+            opts.push("layer=OTH_" + y + "_" + (y + 10));
+        }
+        return opts.join("&");
+    }
+
+    var minYear = 1900;
+    var maxYear = 2017;
+
+
+    var gbif = L.tileLayer(occurrenceLayer + "&" + yearsToGBIFParams(minYear, maxYear), {
+        zIndex: 1000
+    });
+
+    // Create group for your layers and add it to the map
+    var layerGroup = L.layerGroup().addTo(map);
+
+
+    // GBIF	
+    $("#gbif_id").click(function() {
+        if (document.getElementById('gbif_id').checked) {
+            layerGroup.addLayer(gbif);
+
+            // Years dynamic
+            slider.noUiSlider.on('update', function(vals) {
+                document.getElementById("years").innerText = Math.floor(vals[0]) + " - " + Math.floor(vals[1]);
+            });
+
+            // Slider auf Map übertragen
+            slider.noUiSlider.on('update', function(vals) {
+
+                layerGroup.removeLayer(gbif);
+                layerSwitcher.removeLayer(gbif);
+                minYear = vals[0];
+                maxYear = vals[1];
+
+
+
+                gbif = L.tileLayer(occurrenceLayer + "&" + yearsToGBIFParams(Math.floor(vals[0]), Math.floor(vals[1])), {
+                    zIndex: 1000
+                });
+
+                layerGroup.addLayer(gbif);
+                layerSwitcher.addOverlay(gbif, "Occurrence records");
+
+            });
+            layerSwitcher.addOverlay(gbif, "Occurrence records");
+        } else {
+            layerGroup.removeLayer(gbif);
+            layerSwitcher.removeLayer(gbif);
+            slider.noUiSlider.off('update');
+        }
+    });
+
+    // Bootstrap Slider
+    //----------------------------------------------------------
+    var sliderVal;
+
+
+    // GBIF
+    $(function() {
+
+        $('#range-gbif').slider().on('slide', function(ev) {
+            sliderVal = ev.value;
+            gbif.setOpacity(sliderVal / 100);
+        });
+        if (sliderVal) {
+            $('#range-gbif').slider('setValue', sliderVal);
+        }
+    });
+
+    function rangeSlider(sliderVal) {
+        gbif.setOpacity(sliderVal)
+    }
+
+
+    // Time Slider for GBIF
+
+    // Slider setup
+    var slidervar = document.getElementById('slider');
+    noUiSlider.create(slidervar, {
+        start: [1900, 2020],
+        step: 10,
+        connect: true,
+        range: {
+            'min': 1900,
+            'max': 2017
+        }
+    });
+    </script>
+</body>
+
+</html>
