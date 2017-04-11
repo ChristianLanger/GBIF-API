@@ -1,6 +1,6 @@
 ## GBIF API Search
 
-A web tool to search for occurrence records and time from GBIF by using the RESTFUL JSON based API (http://api.gbif.org/v1/)
+A web tool to search GBIF occurrence records over time period by using the GBIF RESTFUL JSON based API (http://api.gbif.org/v1/)
 
 ## Getting Started
 
